@@ -40,6 +40,7 @@ else:
         options=["-select a model-", "llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
     )
     llm = ChatGroq(model=model, api_key=groq_api_key, temperature=0.1)
+
 if provider not in ["-select a provider-"] and  model not in ["-select a model-"]:
     st.write(f"Good choice! You've selected {provider} -> {model}. Fire your query now")
 
@@ -52,15 +53,18 @@ for message in st.session_state.chat_history:
 
 user_prompt = st.chat_input("You:")
 if user_prompt:
-    st.chat_message("user").write(user_prompt)
-    st.session_state.chat_history.append({"role": "user", "content": user_prompt})
-    try:
-        response = llm.invoke(input=[{"role": "system", "content":"You are a helpful chat assistant"},
-                    *st.session_state.chat_history])
-        assistant_response = getattr(response, "content", None) or getattr(response, "text", "")
-        assistant_response = f"[{provider} | {model}]\n\n{assistant_response}"
-        st.session_state.chat_history.append({"role": "system", "content": assistant_response})
-        with st.chat_message("assistant"):
-            st.write(assistant_response)
-    except Exception as e:
-        st.write(e)
+    if provider == "-select a provider-" or model == "-select a model-":
+        st.warning("Choose a valid provider/model. Try again.")
+    else:
+        st.chat_message("user").write(user_prompt)
+        st.session_state.chat_history.append({"role": "user", "content": user_prompt})
+        try:
+            response = llm.invoke(input=[{"role": "system", "content":"You are a helpful chat assistant"},
+                        *st.session_state.chat_history])
+            assistant_response = getattr(response, "content", None) or getattr(response, "text", "")
+            assistant_response = f"[{provider} | {model}]\n\n{assistant_response}"
+            st.session_state.chat_history.append({"role": "system", "content": assistant_response})
+            with st.chat_message("assistant"):
+                st.write(assistant_response)
+        except Exception as e:
+            st.write(e)
